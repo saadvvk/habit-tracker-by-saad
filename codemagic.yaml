@@ -3,7 +3,7 @@ workflows:
     name: Habit Tracker by Saad - Android
     max_build_duration: 30
     environment:
-      flutter: stable
+      flutter: 3.24.3
     scripts:
       - name: Generate missing native Android project files
         script: flutter create --platforms=android .
