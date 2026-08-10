@@ -5,6 +5,8 @@ workflows:
     environment:
       flutter: stable
     scripts:
+      - name: Generate missing native Android project files
+        script: flutter create --platforms=android .
       - name: Get Flutter packages
         script: flutter pub get
       - name: Generate app icons
@@ -14,5 +16,4 @@ workflows:
     artifacts:
       - build/**/outputs/**/*.aab
       - build/**/outputs/**/*.apk
-
-
+      
