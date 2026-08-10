@@ -3,10 +3,15 @@ workflows:
     name: Habit Tracker by Saad - Android
     max_build_duration: 30
     environment:
-      flutter: 3.24.3
+      flutter: stable
     scripts:
       - name: Generate missing native Android project files
         script: flutter create --platforms=android .
+      - name: Force-set compileSdk/targetSdk to avoid template gradle bugs
+        script: |
+          sed -i 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 35/' android/app/build.gradle || true
+          sed -i 's/targetSdkVersion flutter.targetSdkVersion/targetSdkVersion 35/' android/app/build.gradle || true
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/' android/app/build.gradle || true
       - name: Get Flutter packages
         script: flutter pub get
       - name: Generate app icons
