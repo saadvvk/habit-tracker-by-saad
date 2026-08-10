@@ -7,6 +7,10 @@ workflows:
     scripts:
       - name: Generate missing native Android project files
         script: flutter create --platforms=android .
+      - name: Add INTERNET permission (missing by default in release builds)
+        script: |
+          grep -q "android.permission.INTERNET" android/app/src/main/AndroidManifest.xml || \
+          sed -i 's#<manifest xmlns:android="http://schemas.android.com/apk/res/android">#<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <uses-permission android:name="android.permission.INTERNET"/>#' android/app/src/main/AndroidManifest.xml
       - name: Force-set compileSdk/targetSdk to avoid template gradle bugs
         script: |
           sed -i 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 35/' android/app/build.gradle || true
@@ -23,3 +27,4 @@ workflows:
     artifacts:
       - build/**/outputs/**/*.aab
       - build/**/outputs/**/*.apk
+      
