@@ -9,13 +9,33 @@ workflows:
         script: flutter create --platforms=android .
       - name: Add INTERNET permission (missing by default in release builds)
         script: |
-          grep -q "android.permission.INTERNET" android/app/src/main/AndroidManifest.xml || \
-          sed -i 's#<manifest xmlns:android="http://schemas.android.com/apk/res/android">#<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n    <uses-permission android:name="android.permission.INTERNET"/>#' android/app/src/main/AndroidManifest.xml
+          python3 -c "
+          import re
+          path = 'android/app/src/main/AndroidManifest.xml'
+          with open(path) as f:
+              content = f.read()
+          if 'android.permission.INTERNET' not in content:
+              content = re.sub(
+                  r'(<manifest[^>]*>)',
+                  r'\1\n    <uses-permission android:name=\"android.permission.INTERNET\"/>',
+                  content,
+                  count=1
+              )
+              with open(path, 'w') as f:
+                  f.write(content)
+          "
       - name: Force-set compileSdk/targetSdk to avoid template gradle bugs
         script: |
-          sed -i 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 35/' android/app/build.gradle || true
-          sed -i 's/targetSdkVersion flutter.targetSdkVersion/targetSdkVersion 35/' android/app/build.gradle || true
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/' android/app/build.gradle || true
+          python3 -c "
+          path = 'android/app/build.gradle'
+          with open(path) as f:
+              content = f.read()
+          content = content.replace('compileSdkVersion flutter.compileSdkVersion', 'compileSdkVersion 35')
+          content = content.replace('targetSdkVersion flutter.targetSdkVersion', 'targetSdkVersion 35')
+          content = content.replace('minSdkVersion flutter.minSdkVersion', 'minSdkVersion 21')
+          with open(path, 'w') as f:
+              f.write(content)
+          "
       - name: Get Flutter packages
         script: flutter pub get
       - name: Generate app icons
