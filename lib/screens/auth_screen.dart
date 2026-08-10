@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -12,6 +13,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool isLogin = true;
   bool loading = false;
   String? errorText;
+  String? infoText;
 
   final emailCtrl = TextEditingController();
   final passwordCtrl = TextEditingController();
@@ -20,6 +22,7 @@ class _AuthScreenState extends State<AuthScreen> {
     setState(() {
       loading = true;
       errorText = null;
+      infoText = null;
     });
     try {
       if (isLogin) {
@@ -27,14 +30,42 @@ class _AuthScreenState extends State<AuthScreen> {
           email: emailCtrl.text.trim(),
           password: passwordCtrl.text,
         );
+        // On success, AuthGate's session listener automatically
+        // switches to the Dashboard — no extra navigation needed.
       } else {
-        await supabase.auth.signUp(
+        final res = await supabase.auth.signUp(
           email: emailCtrl.text.trim(),
           password: passwordCtrl.text,
         );
+
+        if (res.session != null) {
+          // Email confirmation is OFF in Supabase — user is logged in
+          // immediately, AuthGate will switch to Dashboard on its own.
+        } else {
+          // Email confirmation is ON — no session yet.
+          setState(() {
+            infoText =
+                'Account created! Check your email to verify, then log in.';
+            isLogin = true;
+          });
+        }
+      }
+    } on AuthException catch (e) {
+      final msg = e.message.toLowerCase();
+      if (msg.contains('already registered') ||
+          msg.contains('already exists') ||
+          msg.contains('user already')) {
+        setState(() {
+          errorText = 'An account with this email already exists. Please log in.';
+          isLogin = true;
+        });
+      } else if (msg.contains('invalid login credentials')) {
+        setState(() => errorText = 'Incorrect email or password.');
+      } else {
+        setState(() => errorText = e.message);
       }
     } catch (e) {
-      setState(() => errorText = e.toString());
+      setState(() => errorText = 'Something went wrong. Please try again.');
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -95,6 +126,12 @@ class _AuthScreenState extends State<AuthScreen> {
                   const SizedBox(height: 12),
                   Text(errorText!,
                       style: const TextStyle(color: Colors.red, fontSize: 13)),
+                ],
+                if (infoText != null) ...[
+                  const SizedBox(height: 12),
+                  Text(infoText!,
+                      style: const TextStyle(
+                          color: Color(0xFF16A34A), fontSize: 13)),
                 ],
                 const SizedBox(height: 22),
                 SizedBox(
