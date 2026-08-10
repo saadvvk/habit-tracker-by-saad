@@ -24,18 +24,6 @@ workflows:
               with open(path, 'w') as f:
                   f.write(content)
           "
-      - name: Force-set compileSdk/targetSdk to avoid template gradle bugs
-        script: |
-          python3 -c "
-          path = 'android/app/build.gradle'
-          with open(path) as f:
-              content = f.read()
-          content = content.replace('compileSdkVersion flutter.compileSdkVersion', 'compileSdkVersion 35')
-          content = content.replace('targetSdkVersion flutter.targetSdkVersion', 'targetSdkVersion 35')
-          content = content.replace('minSdkVersion flutter.minSdkVersion', 'minSdkVersion 21')
-          with open(path, 'w') as f:
-              f.write(content)
-          "
       - name: Get Flutter packages
         script: flutter pub get
       - name: Generate app icons
@@ -47,4 +35,3 @@ workflows:
     artifacts:
       - build/**/outputs/**/*.aab
       - build/**/outputs/**/*.apk
-      
